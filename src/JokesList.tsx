@@ -10,7 +10,7 @@ interface JokesListProps {
 }
 
 interface JokesListState {
-  jokes: string[];
+  jokes: any[];
 }
 
 class JokesList extends Component<JokesListProps, JokesListState> {
@@ -24,6 +24,8 @@ class JokesList extends Component<JokesListProps, JokesListState> {
     this.state = {
       jokes: [],
     };
+
+    this.handleVote = this.handleVote.bind(this);
   }
 
   async componentDidMount() {
@@ -34,17 +36,44 @@ class JokesList extends Component<JokesListProps, JokesListState> {
         config
       );
 
-      jokes.push(res.data.joke);
+      jokes.push({ text: res.data.joke, id: res.data.id, votes: 0 });
     }
 
     this.setState({ jokes });
   }
+
+  handleVote(id: string, delta: number) {
+    console.log("hjljl");
+
+    this.setState((st) => ({
+      jokes: st.jokes.map((j) => {
+        if (j.id === id) {
+          return { ...j, votes: j.votes + delta };
+        }
+        return { ...j };
+      }),
+    }));
+  }
   render() {
     return (
       <div className="JokesList">
+        <div className="JokesList-sidebar">
+          <h1 className="JokesList-title">
+            <span>Dad</span> Jokes
+          </h1>
+          <img src="https://assets.dryicons.com/uploads/icon/svg/8927/0eb14c71-38f2-433a-bfc8-23d9c99b3647.svg" />
+          <button className="JokesList-getmore">Fetch Jokes</button>
+        </div>
+
         <div className="JokesList-jokes">
           {this.state.jokes.map((j) => (
-            <Joke text={j} />
+            <Joke
+              key={j.id}
+              text={j.text}
+              votes={j.votes}
+              upvote={() => this.handleVote(j.id, 1)}
+              downvote={() => this.handleVote(j.id, -1)}
+            />
           ))}
         </div>
       </div>
