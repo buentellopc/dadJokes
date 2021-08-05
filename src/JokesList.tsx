@@ -11,6 +11,7 @@ interface JokesListProps {
 
 interface JokesListState {
   jokes: any[];
+  loading: boolean;
 }
 
 class JokesList extends Component<JokesListProps, JokesListState> {
@@ -23,6 +24,7 @@ class JokesList extends Component<JokesListProps, JokesListState> {
 
     this.state = {
       jokes: JSON.parse(window.localStorage.getItem("jokes") || "[]"),
+      loading: false,
     };
 
     this.handleVote = this.handleVote.bind(this);
@@ -46,6 +48,7 @@ class JokesList extends Component<JokesListProps, JokesListState> {
 
     this.setState(
       (st) => ({
+        loading: false,
         jokes: [...st.jokes, ...jokes],
       }),
       () => {
@@ -55,7 +58,9 @@ class JokesList extends Component<JokesListProps, JokesListState> {
   }
 
   handleClick() {
-    this.getJokes();
+    this.setState({ loading: true }, () => {
+      this.getJokes();
+    });
   }
 
   handleVote(id: string, delta: number) {
@@ -74,6 +79,15 @@ class JokesList extends Component<JokesListProps, JokesListState> {
     );
   }
   render() {
+    if (this.state.loading) {
+      return (
+        <div className="JokesList-spinner">
+          <i className="far fa-8x fa-laugh fa-spin" />
+          <h1 className="JokesList-title">Loading... </h1>
+        </div>
+      );
+    }
+
     return (
       <div className="JokesList">
         <div className="JokesList-sidebar">
