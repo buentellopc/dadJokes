@@ -15,6 +15,8 @@ interface JokesListState {
 }
 
 class JokesList extends Component<JokesListProps, JokesListState> {
+  seenJokes: Set<any>;
+
   static defaultProps = {
     numJokesToGet: 10,
   };
@@ -26,6 +28,8 @@ class JokesList extends Component<JokesListProps, JokesListState> {
       jokes: JSON.parse(window.localStorage.getItem("jokes") || "[]"),
       loading: false,
     };
+    this.seenJokes = new Set(this.state.jokes.map((j) => j.text));
+    console.log(this.seenJokes);
 
     this.handleVote = this.handleVote.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -42,9 +46,18 @@ class JokesList extends Component<JokesListProps, JokesListState> {
         "https://icanhazdadjoke.com/",
         config
       );
+      let newJoke = res.data.joke;
 
-      jokes.push({ text: res.data.joke, id: res.data.id, votes: 0 });
+      if (!this.seenJokes.has(newJoke)) {
+        this.seenJokes.add(newJoke);
+
+        jokes.push({ text: res.data.joke, id: res.data.id, votes: 0 });
+      } else {
+        console.log("Duplicate found!");
+        console.log(res.data.joke);
+      }
     }
+    //console.log(this.seenJokes);
 
     this.setState(
       (st) => ({
