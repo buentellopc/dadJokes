@@ -40,34 +40,43 @@ class JokesList extends Component<JokesListProps, JokesListState> {
   }
 
   async getJokes() {
-    let jokes: any[] = [];
-    while (jokes.length < this.props.numJokesToGet) {
-      let res = await axios.get<{ joke: string; id: string }>(
-        "https://icanhazdadjoke.com/",
-        config
+    try {
+      let jokes: any[] = [];
+      while (jokes.length < this.props.numJokesToGet) {
+        let res = await axios.get<{ joke: string; id: string }>(
+          "https://icanhazdadjoke.com/",
+          config
+        );
+        let newJoke = res.data.joke;
+
+        if (!this.seenJokes.has(newJoke)) {
+          this.seenJokes.add(newJoke);
+
+          jokes.push({ text: res.data.joke, id: res.data.id, votes: 0 });
+        } else {
+          console.log("Duplicate found!");
+          console.log(res.data.joke);
+        }
+      }
+      //console.log(this.seenJokes);
+
+      this.setState(
+        (st) => ({
+          loading: false,
+          jokes: [...st.jokes, ...jokes],
+        }),
+        () => {
+          window.localStorage.setItem(
+            "jokes",
+            JSON.stringify(this.state.jokes)
+          );
+        }
       );
-      let newJoke = res.data.joke;
-
-      if (!this.seenJokes.has(newJoke)) {
-        this.seenJokes.add(newJoke);
-
-        jokes.push({ text: res.data.joke, id: res.data.id, votes: 0 });
-      } else {
-        console.log("Duplicate found!");
-        console.log(res.data.joke);
-      }
+    } catch (error) {
+      alert(error);
+      console.log(error);
+      this.setState({ loading: false });
     }
-    //console.log(this.seenJokes);
-
-    this.setState(
-      (st) => ({
-        loading: false,
-        jokes: [...st.jokes, ...jokes],
-      }),
-      () => {
-        window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes));
-      }
-    );
   }
 
   handleClick() {
@@ -114,15 +123,17 @@ class JokesList extends Component<JokesListProps, JokesListState> {
         </div>
 
         <div className="JokesList-jokes">
-          {this.state.jokes.map((j) => (
-            <Joke
-              key={j.id}
-              text={j.text}
-              votes={j.votes}
-              upvote={() => this.handleVote(j.id, 1)}
-              downvote={() => this.handleVote(j.id, -1)}
-            />
-          ))}
+          {this.state.jokes
+            .map((j) => (
+              <Joke
+                key={j.id}
+                text={j.text}
+                votes={j.votes}
+                upvote={() => this.handleVote(j.id, 1)}
+                downvote={() => this.handleVote(j.id, -1)}
+              />
+            ))
+            .sort((a, b) => b.props.votes - a.props.votes)}
         </div>
       </div>
     );
